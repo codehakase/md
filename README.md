@@ -12,7 +12,7 @@ A fast, lightweight CLI utility for rendering Markdown files with rich formattin
 ## Installation
 
 ```bash
-go install github.com/codehakase/md@latest
+go install github.com/codehakase/md
 ```
 
 Or build from source:
@@ -20,7 +20,7 @@ Or build from source:
 ```bash
 git clone https://github.com/codehakase/md.git
 cd md
-go build ./cmd/md
+go build -o md .
 ./md -v <file.md>
 ```
 
