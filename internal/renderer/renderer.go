@@ -7,12 +7,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/codehakase/md/internal/theme"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	"github.com/codehakase/md/internal/theme"
 )
 
 // CodeHighlighter interface for syntax highlighting
@@ -60,7 +60,7 @@ func (r *Renderer) RenderFile(filename string, highlighter CodeHighlighter) (str
 // RenderContent renders markdown content to styled terminal output
 func (r *Renderer) RenderContent(content []byte, highlighter CodeHighlighter) (string, error) {
 	doc := r.goldmark.Parser().Parse(text.NewReader(content))
-	
+
 	termRenderer := &terminalRenderer{
 		themeManager: r.themeManager,
 		highlighter:  highlighter,
@@ -75,7 +75,7 @@ func (r *Renderer) RenderContent(content []byte, highlighter CodeHighlighter) (s
 	result := buf.String()
 	result = TrimTrailingWhitespace(result)
 	result = EnsureTrailingNewline(result)
-	
+
 	return result, nil
 }
 
@@ -159,7 +159,7 @@ func (tr *terminalRenderer) renderHeading(w io.Writer, source []byte, n *ast.Hea
 	if entering {
 		var headerTheme theme.ColorKey
 		var prefix string
-		
+
 		switch n.Level {
 		case 1:
 			headerTheme = theme.Header1
@@ -180,15 +180,15 @@ func (tr *terminalRenderer) renderHeading(w io.Writer, source []byte, n *ast.Hea
 			headerTheme = theme.Header6
 			prefix = H6Prefix
 		}
-		
+
 		if n.PreviousSibling() != nil {
 			fmt.Fprint(w, "\n")
 		}
-		
+
 		fmt.Fprint(w, tr.themeManager.StyleNoReset(prefix, headerTheme))
 	} else {
 		fmt.Fprint(w, tr.themeManager.Reset())
-		fmt.Fprint(w, "\n\n")
+		fmt.Fprint(w, "\n")
 	}
 	return nil
 }
@@ -209,10 +209,10 @@ func (tr *terminalRenderer) renderText(w io.Writer, source []byte, n *ast.Text, 
 		if _, isCodeSpanChild := n.Parent().(*ast.CodeSpan); isCodeSpanChild {
 			return nil
 		}
-		
+
 		segment := n.Segment
 		value := segment.Value(source)
-		
+
 		if n.IsRaw() {
 			fmt.Fprint(w, string(value))
 		} else {
@@ -260,18 +260,18 @@ func (tr *terminalRenderer) renderFencedCodeBlock(w io.Writer, source []byte, n 
 		if n.Info != nil {
 			language = string(n.Info.Text(source))
 		}
-		
+
 		var code strings.Builder
 		for i := 0; i < n.Lines().Len(); i++ {
 			line := n.Lines().At(i)
 			code.Write(line.Value(source))
 		}
-		
+
 		highlighted, err := tr.highlighter.Highlight(code.String(), language)
 		if err != nil {
 			highlighted = tr.themeManager.Style(code.String(), theme.Code)
 		}
-		
+
 		fmt.Fprint(w, "\n")
 		fmt.Fprint(w, Indent(strings.TrimRight(highlighted, "\n"), 1))
 		fmt.Fprint(w, "\n\n")
@@ -286,9 +286,9 @@ func (tr *terminalRenderer) renderCodeBlock(w io.Writer, source []byte, n *ast.C
 			line := n.Lines().At(i)
 			code.Write(line.Value(source))
 		}
-		
+
 		styled := tr.themeManager.Style(code.String(), theme.Code)
-		
+
 		fmt.Fprint(w, "\n")
 		fmt.Fprint(w, Indent(strings.TrimRight(styled, "\n"), 1))
 		fmt.Fprint(w, "\n\n")
@@ -332,9 +332,9 @@ func (tr *terminalRenderer) renderListItem(w io.Writer, source []byte, n *ast.Li
 			parent = parent.Parent()
 		}
 		level--
-		
+
 		indent := strings.Repeat("  ", level)
-		
+
 		var marker string
 		if list, ok := n.Parent().(*ast.List); ok {
 			if list.IsOrdered() {
@@ -346,8 +346,8 @@ func (tr *terminalRenderer) renderListItem(w io.Writer, source []byte, n *ast.Li
 		} else {
 			marker = tr.themeManager.Style("•", theme.BulletPoint)
 		}
-		
-		fmt.Fprintf(w, "%s%s ", indent, marker)
+
+		fmt.Fprintf(w, "\u00A0%s%s ", indent, marker)
 	} else {
 		fmt.Fprint(w, "\n")
 	}
@@ -412,13 +412,13 @@ func (tr *terminalRenderer) renderTableRow(w io.Writer, source []byte, node ast.
 	} else {
 		fmt.Fprint(w, tr.themeManager.Reset())
 		fmt.Fprint(w, "\n")
-		
+
 		if node.Kind().String() == "TableHeader" {
 			cellCount := 0
 			for child := node.FirstChild(); child != nil; child = child.NextSibling() {
 				cellCount++
 			}
-			
+
 			fmt.Fprint(w, tr.themeManager.GetColor(theme.TableBorder))
 			for i := 0; i < cellCount; i++ {
 				fmt.Fprint(w, "├")
@@ -445,7 +445,7 @@ func (tr *terminalRenderer) renderTableCell(w io.Writer, source []byte, node ast
 		if node.Parent().Kind().String() == "TableHeader" {
 			fmt.Fprint(w, tr.themeManager.Reset())
 		}
-		
+
 		fmt.Fprint(w, strings.Repeat(" ", 14))
 		fmt.Fprint(w, tr.themeManager.GetColor(theme.TableBorder))
 		fmt.Fprint(w, "│")
@@ -470,3 +470,4 @@ func (tr *terminalRenderer) renderTaskCheckBox(w io.Writer, source []byte, node 
 	}
 	return nil
 }
+

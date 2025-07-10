@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	vimMode   bool
+	plainMode bool
 	watchMode bool
 )
 
@@ -49,11 +49,11 @@ and provides options for vim-style navigation.`,
 				return fmt.Errorf("rendering error: %v", err)
 			}
 
-			if vimMode {
-				return mdViewer.DisplayInVimMode(content)
-			} else {
+			if plainMode {
 				fmt.Print(content)
 				return nil
+			} else {
+				return mdViewer.DisplayInVimMode(content)
 			}
 		}
 
@@ -62,7 +62,7 @@ and provides options for vim-style navigation.`,
 }
 
 func init() {
-	rootCmd.Flags().BoolVarP(&vimMode, "vim", "v", false, "Enable vim-style navigation")
+	rootCmd.Flags().BoolVarP(&plainMode, "plain", "p", false, "Render entire markdown")
 }
 
 func main() {
