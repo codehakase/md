@@ -15,7 +15,6 @@ import (
 
 var (
 	plainMode bool
-	watchMode bool
 )
 
 var rootCmd = &cobra.Command{

@@ -11,6 +11,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
+	extast "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 )
@@ -338,8 +339,12 @@ func (tr *terminalRenderer) renderListItem(w io.Writer, source []byte, n *ast.Li
 		var marker string
 		if list, ok := n.Parent().(*ast.List); ok {
 			if list.IsOrdered() {
-				// Using generic numbered marker for simplicity - would need counter for proper numbering
-				marker = tr.themeManager.Style("1.", theme.OrderedList)
+				// Calculate the item number by counting previous siblings
+				itemNum := 1
+				for sibling := n.PreviousSibling(); sibling != nil; sibling = sibling.PreviousSibling() {
+					itemNum++
+				}
+				marker = tr.themeManager.Style(fmt.Sprintf("%d.", itemNum), theme.OrderedList)
 			} else {
 				marker = tr.themeManager.Style("•", theme.BulletPoint)
 			}
@@ -464,8 +469,11 @@ func (tr *terminalRenderer) renderStrikethrough(w io.Writer, source []byte, node
 
 func (tr *terminalRenderer) renderTaskCheckBox(w io.Writer, source []byte, node ast.Node, entering bool) error {
 	if entering {
-		// Simplified implementation - would need to cast to extension type to check if checked
-		fmt.Fprint(w, tr.themeManager.Style("[ ]", theme.BulletPoint))
+		checkbox := "[ ]"
+		if tcb, ok := node.(*extast.TaskCheckBox); ok && tcb.IsChecked {
+			checkbox = "[x]"
+		}
+		fmt.Fprint(w, tr.themeManager.Style(checkbox, theme.BulletPoint))
 		fmt.Fprint(w, " ")
 	}
 	return nil
