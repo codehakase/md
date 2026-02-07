@@ -28,17 +28,28 @@ go build -o md .
 
 ```
 Usage:
-  md [flags] <markdown-file>
+  md [flags] [markdown-file]
 
 Flags:
-  -h, --help   help for md
-  -v, --vim    Enable vim-style navigation
+  -h, --help    help for md
+  -p, --plain   Render entire markdown to stdout (no pager)
 ```
 
+By default, `md` displays content in a vim-style pager. Use `--plain` to output directly to stdout.
+
+### Reading from stdin
+
+You can pipe markdown content directly to `md`:
+
+```bash
+cat README.md | md
+echo "# Hello World" | md
+curl -s https://example.com/doc.md | md
+```
 
 ### Vim Navigation Keys
 
-When using `--vim` mode, you can navigate using:
+In the default pager mode, you can navigate using:
 
 - `j` / `k` - Move down/up
 - `gg` - Go to top
